@@ -1,0 +1,6 @@
+{
+  "name": "Hatfield Montessori School",
+  "description": "A premium educational institution in Accra, Ghana, dedicated to academic excellence and character development with a blend of technology and creativity.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

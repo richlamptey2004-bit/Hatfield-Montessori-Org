@@ -1,0 +1,104 @@
+{
+  "entities": {
+    "Event": {
+      "title": "School Event",
+      "description": "Educational and social events at Hatfield Montessori School",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 100,
+          "description": "The title of the event"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 1000,
+          "description": "Detailed description of the event"
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the event takes place"
+        },
+        "imageUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the event's promotional image"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of creation"
+        }
+      },
+      "required": ["title", "description", "date", "imageUrl", "createdAt"]
+    },
+    "GalleryItem": {
+      "title": "Gallery Image",
+      "description": "Photos of school facilities and activities",
+      "type": "object",
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["Classrooms", "Labs", "ICT", "Playground", "Events"],
+          "description": "Category of the facility or activity"
+        },
+        "imageUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL to the high-resolution image"
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Brief caption for the photo"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of creation"
+        }
+      },
+      "required": ["category", "imageUrl", "createdAt"]
+    },
+    "WebsiteContent": {
+      "title": "Dynamic Content",
+      "description": "Editable text content for various sections of the site",
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "description": "Unique identifier for the content block"
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 5000,
+          "description": "The actual text content or JSON string"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of last update"
+        }
+      },
+      "required": ["key", "value", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "events": {
+      "schema": "Event",
+      "description": "Collection of school events"
+    },
+    "gallery": {
+      "schema": "GalleryItem",
+      "description": "Collection of gallery images"
+    },
+    "content": {
+      "schema": "WebsiteContent",
+      "description": "Collection of dynamic website content"
+    }
+  }
+}
