@@ -56,7 +56,11 @@ export default function Admin() {
     fetchItems();
   }, [user, activeTab]);
 
+  const [email, setEmail] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
+
   const handleLogin = async () => {
+    setStatus(null);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -65,9 +69,38 @@ export default function Admin() {
         }
       });
       if (error) throw error;
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setStatus({ type: 'error', msg: 'Login failed. Please try again.' });
+      if (err.message?.includes('provider is not enabled')) {
+        setStatus({ 
+          type: 'error', 
+          msg: 'Google Login is not enabled in your Supabase project. Please go to your Supabase Dashboard -> Authentication -> Providers and enable Google.' 
+        });
+      } else {
+        setStatus({ type: 'error', msg: 'Login failed. Please try again.' });
+      }
+    }
+  };
+
+  const handleEmailLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setEmailLoading(true);
+    setStatus(null);
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.origin + '/admin',
+        },
+      });
+      if (error) throw error;
+      setStatus({ type: 'success', msg: 'Magic link sent! Please check your email to sign in.' });
+    } catch (err: any) {
+      console.error(err);
+      setStatus({ type: 'error', msg: err.message || 'Failed to send magic link.' });
+    } finally {
+      setEmailLoading(false);
     }
   };
 
@@ -102,26 +135,70 @@ export default function Admin() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
-        <div className="bg-white p-12 rounded-[3rem] shadow-2xl border border-slate-100 max-w-md w-full text-center space-y-8">
+        <div className="bg-white p-10 md:p-12 rounded-[3rem] shadow-2xl border border-slate-100 max-w-md w-full text-center space-y-8">
           <div className="w-20 h-20 bg-navy/5 rounded-3xl flex items-center justify-center mx-auto">
             <ShieldCheck className="w-10 h-10 text-navy" />
           </div>
           <div>
             <h1 className="text-3xl font-bold text-navy mb-2">Staff Portal</h1>
-            <p className="text-slate-500">Please sign in with an authorized admin account to manage school content.</p>
+            <p className="text-slate-500 text-sm">Authorized school administrators only.</p>
           </div>
-          {status && (
-            <div className={cn("p-4 rounded-xl text-sm font-medium", status.type === 'success' ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700")}>
-              {status.msg}
+          
+          <AnimatePresence>
+            {status && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className={cn(
+                  "p-4 rounded-xl text-xs font-medium text-left leading-relaxed", 
+                  status.type === 'success' ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-700 border border-red-100"
+                )}
+              >
+                {status.msg}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="space-y-4">
+            <button 
+              onClick={handleLogin}
+              className="w-full py-4 bg-white border border-slate-200 text-navy font-bold rounded-2xl hover:bg-slate-50 transition-all flex items-center justify-center gap-3 shadow-sm active:scale-[0.98]"
+            >
+              <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
+              SIGN IN WITH GOOGLE
+            </button>
+
+            <div className="flex items-center gap-4 my-6">
+              <div className="h-px bg-slate-100 flex-1"></div>
+              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">or use magic link</span>
+              <div className="h-px bg-slate-100 flex-1"></div>
             </div>
-          )}
-          <button 
-            onClick={handleLogin}
-            className="w-full py-4 bg-navy text-white font-bold rounded-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3"
-          >
-            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5" alt="Google" />
-            SIGN IN WITH GOOGLE
-          </button>
+
+            <form onSubmit={handleEmailLogin} className="space-y-3">
+              <input 
+                type="email" 
+                placeholder="Staff Email Address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-5 py-4 bg-slate-50 border-none rounded-2xl focus:ring-2 focus:ring-gold outline-none transition-all text-sm"
+                required
+              />
+              <button 
+                type="submit"
+                disabled={emailLoading}
+                className="w-full py-4 bg-navy text-white font-bold rounded-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-2 shadow-lg shadow-navy/10 disabled:opacity-50"
+              >
+                {emailLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogIn className="w-4 h-4" />}
+                SEND MAGIC LINK
+              </button>
+            </form>
+          </div>
+          
+          <div className="pt-4">
+            <p className="text-[10px] text-slate-400 leading-relaxed uppercase tracking-wider font-medium">
+              Note: To use Google Login, ensure it is enabled in your Supabase Dashboard under Auth Providers.
+            </p>
+          </div>
         </div>
       </div>
     );
